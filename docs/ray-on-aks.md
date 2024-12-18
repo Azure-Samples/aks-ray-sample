@@ -1,9 +1,9 @@
 
 # Deploy a Ray cluster on Azure Kubernetes Service (AKS) overview
 
-In this article, you learn how to deploy a Ray cluster on Azure Kubernetes Service (AKS) using the KubeRay operator. You also learn how to use the Ray cluster to train a simple machine learning model and display the results on the Ray dashboard.
+In this article, you learn how to deploy a Ray cluster on Azure Kubernetes Service (AKS) using the KubeRay operator. You also learn how to use the Ray cluster to train a simple machine learning model and display the results on the Ray Dashboard.
 
-> ![!NOTE]
+> [!NOTE]
 > Open-source software is mentioned throughout AKS documentation and samples. Software that you deploy is excluded from AKS service-level agreements, limited warranty, and Azure support. As you use open-source technology alongside AKS, consult the support options available from the respective communities and project maintainers to develop a plan.
 >
 > For example, the [Ray GitHub repository](https://github.com/ray-project/ray?tab=readme-ov-file#getting-involved) describes several platforms that vary in response time, purpose, and support level.
@@ -38,12 +38,12 @@ The deployment process consists of the following steps:
 ## Next step
 
 > [!div class="nextstepaction"]
-> [Configure and deploy a Ray cluster on Azure Kubernetes Service (AKS) using KubeRay](./deploy-ray-aks.md)
+> [Configure and deploy a Ray cluster on Azure Kubernetes Service (AKS)](./deploy-ray-aks.md)
 
 ## Contributors
 
 *Microsoft maintains this article. The following contributors originally wrote it:*
 
-- Russell de Pina | Principal Technical Program Manager - Microsoft
-- Ken Kilty | Principal Technical Program Manager - Microsoft
-- Erin Schaffer | Content Developer 2 - Microsoft
+* Russell de Pina | Principal Technical Program Manager - Microsoft
+* Ken Kilty | Principal Technical Program Manager - Microsoft
+* Erin Schaffer | Content Developer 2 - Microsoft
