@@ -1,47 +1,41 @@
+# Configure and deploy a Ray cluster on Azure Kubernetes Service (AKS)
 
-# Ray on Azure Kubernetes Service (AKS)
+In this article, you configure and deploy a Ray cluster on Azure Kubernetes Service (AKS) using KubeRay. You also learn how to use the Ray cluster to train a simple machine learning model and display the results on the Ray dashboard.
 
-In this article, we will deploy a Ray cluster on an Azure Kubernetes Service (AKS) cluster using the KubeRay operator. You will use the Ray Cluster to train a simple machine learning model and display the results on the Ray Dashboard running on the AKS cluster.
+This article provides two methods to deploy the Ray cluster on AKS:
 
-## What is Ray?
-
-Ray is an open-source project developed at UC Berkeley's RISE Lab that provides a unified framework for scaling AI and Python applications. It consists of a core distributed runtime and a set of AI libraries designed to accelerate machine learning workloads. Ray simplifies the process of running compute-intensive Python tasks at massive scale, allowing developers to seamlessly scale their applications from a single laptop to a large cluster. The framework supports various machine learning tasks, including distributed training, hyperparameter tuning, reinforcement learning, and production model serving. You can find out more about Ray [here](https://github.com/ray-project/ray).
-
-## What is KubeRay?
-
-KubeRay is an open-source project that provides a Kubernetes operator for deploying and managing Ray clusters on Kubernetes. The operator simplifies the process of deploying and managing Ray clusters on Kubernetes by automating the deployment, scaling, and monitoring of Ray clusters. It provides a declarative way to define Ray clusters using Kubernetes custom resources, making it easy to manage Ray clusters alongside other Kubernetes resources. You can find out more about KubeRay [here](https://github.com/ray-project/kuberay).
+* **[Non-interactive deployment](#deploy-the-ray-sample-non-interactively)**: Use the `deploy.sh` script in the GitHub repository to deploy the complete Ray sample non-interactively.
+* **[Manual deployment](#manually-deploy-the-ray-sample-to-aks)**: Follow the manual deployment steps to deploy the Ray sample to AKS.
 
 ## Prerequisites
 
-Before you begin, you will need the following:
+* An Azure subscription. If you don't have an Azure subscription, you can create a free account [here](https://azure.microsoft.com/free/).
+* The Azure CLI installed on your local machine. You can install it using the instructions in [How to install the Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli).
+* The [Azure Kubernetes Service Preview extension](https://learn.microsoft.com/azure/aks/draft#install-the-aks-preview-azure-cli-extension) installed.
+* [Helm](https://helm.sh/docs/intro/install/) installed.
+* [Terraform client tools](https://developer.hashicorp.com/terraform/install) or [OpenTofu](https://opentofu.org/) installed. This article uses Terrafrom, but the modules used should be compatible with OpenTofu.
 
-1. An Azure subscription. If you don't have an Azure subscription, you can create a free account [here](https://azure.microsoft.com/free/).
-1. The Azure CLI installed on your local machine. You can install the Azure CLI by following the instructions [here](https://docs.microsoft.com/cli/azure/install-azure-cli).
-1. The [Azure Kubernetes Service Preview extension](https://learn.microsoft.com/azure/aks/draft#install-the-aks-preview-azure-cli-extension) must be installed.
-1. [Helm](https://helm.sh/docs/intro/install/) must be installed.
-1. [Terraform client tools](https://developer.hashicorp.com/terraform/install) or [OpenTofu](https://opentofu.org/) must be installed. This guide makes use of Terrafrom, however the modules used should be compatible with OpenTofu.
+## Deploy the Ray sample non-interactively
 
-## Deploy Sample to AKS (Complete)
+If you want to deploy the complete Ray sample non-interactively, you can use the `deploy.sh` script in the GitHub repository. This script completes the steps outlined in the [Ray deployment process section](./ray-on-aks.md#ray-deployment-process).
 
-The sample includes a script that will:
+1. Clone the GitHub repo locally and change to the root of the repo using the following commands:
 
-1. Use Terraform to create a local plan file to define the desired state for infrastructure required AKS Infrastructure that consists of an Azure Resource Group, a dedicated system node pool, and a workload node pool for Ray with three nodes.
-1. Deploys a local Terraform plan to Azure.
-1. Retrieve outputs from the Terraform deployment and obtains k8s credentials to the newly deployed AKS Cluster.
-1. Installs Helm Ray repository and deploys [Ray Operator (KubeRay)](https://docs.ray.io/en/latest/cluster/kubernetes/index.html) to the AKS cluster via Helm.
-1. Downloads and executes a [Ray Job](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html) YAML manifest from the Ray Github samples repo to perform an Image classification ([MNIST](https://github.com/cvdfoundation/mnist) dataset) using Convnets ([convolutional neural network](https://techcommunity.microsoft.com/discussions/machinelearning/what-is-convolutional-neural-network-%E2%80%94-cnn-deep-learning/4184725)).
-1. Outputs the logs from the Ray job presenting an overview of the machine learning process performed by Ray.
+    ```bash
+    git clone <repo-url>
+    cd <repo-name>
+    ```
 
-Clone the repo locally and change to the root of the local repo. To execute the sample end to end non-interatively run the following command:
+2. Deploy the complete sample using the following commands:
 
-```bash
-chmod +x deploy.sh  
-./deploy.sh   
-```
+    ```bash
+    chmod +x deploy.sh
+    ./deploy.sh
+    ```
 
-Review the output of the logs and view the resource group in the Azure Portal to review the infrastructure that was created.
+3. Once the deployment completes, review the output of the logs and the resource group in the Azure portal to see the infrastructure that was created.
 
-## Manually Deploy Sample to AKS (Step-by-Step)
+## Manually deploy the Ray sample to AKS
 
 Fashion MNIST is a dataset of Zalando's article images—consisting of a training set of 60,000 examples and a test set of 10,000 examples. Each example is a 28x28 grayscale image, associated with a label from 10 classes. We will train a simple PyTorch model on this dataset using the Ray cluster.
 
@@ -340,5 +334,8 @@ To clean up the resources created in this guide, you can delete the Azure Resour
 
 ## Contributors
 
-- Russell de Pina (Principal Technical Program Manager - Microsoft)
-- Kenneth Kilty (Principal Technical Program Manager - Microsoft)
+*Microsoft maintains this article. The following contributors originally wrote it:*
+
+- Russell de Pina | Principal Technical Program Manager - Microsoft
+- Ken Kilty | Principal Technical Program Manager - Microsoft
+- Erin Schaffer | Content Developer 2 - Microsoft
