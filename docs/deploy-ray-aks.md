@@ -18,13 +18,13 @@ This article provides two methods to deploy the Ray cluster on AKS:
 
 ## Deploy the Ray sample non-interactively
 
-If you want to deploy the complete Ray sample non-interactively, you can use the `deploy.sh` script in the GitHub repository. This script completes the steps outlined in the [Ray deployment process section](./ray-on-aks.md#ray-deployment-process).
+If you want to deploy the complete Ray sample non-interactively, you can use the `deploy.sh` script in the GitHub repository ([https://github.com/Azure-Samples/aks-ray-sample](https://github.com/Azure-Samples/aks-ray-sample)). This script completes the steps outlined in the [Ray deployment process section](./ray-on-aks.md#ray-deployment-process).
 
 1. Clone the GitHub repo locally and change to the root of the repo using the following commands:
 
     ```bash
-    git clone <repo-url>
-    cd <repo-name>
+    git clone https://github.com/Azure-Samples/aks-ray-sample
+    cd aks-ray-sample
     ```
 
 2. Deploy the complete sample using the following commands:
