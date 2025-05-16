@@ -74,7 +74,8 @@ An AKS cluster with 10 virtual machines. To create an AKS cluster with 9 Standar
 
 ## Run the tuning job
 
-1. To run the tuning job, run the gpt2_submit.py python scripts as below:
+1. To run the tuning job, run the gpt2_submit.py python scripts as below. The job will take ~8 minutes
+   to complete.
 
     ```bash
     python sample-tuning-setup/gpt2_submit.py
