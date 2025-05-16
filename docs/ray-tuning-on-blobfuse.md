@@ -32,7 +32,7 @@ An AKS cluster with 10 virtual machines. To create an AKS cluster with 9 Standar
 
 2. Edit the pv.yaml file in the sample-tuning-setup directory, and update the values for RESOURCE_GROUP_NAME, STORAGE_ACCOUNT_NAME, and CONTAINER_NAME.
 
-3. Update the MANAGED_IDENTITY_CLIENT_ID to the Managed Identity that has access to your storage account.
+3. Update the MANAGED_IDENTITY_CLIENT_ID to the client ID of the Managed Identity that now has access to your storage account. You can find the client ID by navigating to the Azure portal, selecting your Managed Identity, and copying the client ID from the 'Overview' section.
 
 4. Apply all the YAML files located in the sample-tuning-setup directory
 
