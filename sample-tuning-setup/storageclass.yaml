@@ -14,7 +14,7 @@ mountOptions:
 - --log-level=LOG_DEBUG
 parameters:
   AzureStorageAuthType: MSI
-  AzureStorageIdentityClientID: 8f229821-3235-49ca-8213-989f75b93d39
+  AzureStorageIdentityClientID: MANAGED_IDENTITY_CLIENT_ID
   protocol: fuse
 provisioner: blob.csi.azure.com
 reclaimPolicy: Delete
