@@ -21,7 +21,7 @@ Clone the repository to your local machine. Then make sure you have all the prer
 3. Enable execute permissions on the `deploy.sh` script by running `chmod +x deploy.sh`.
 4. Run the `deploy.sh` script by running `./deploy.sh`. This script will deploy the AKS cluster, install the KubeRay operator then submit a training job to run on the AKS cluster.
 
-## Modle tuning with Ray
+## Model tuning with Ray
 
 YOu can run model tuning jobs easily on Ray cluster with Azure Blob storage. See the steps in [Ray tuning on Azure Blobs](./docs/ray-tuning-on-blobfuse.md)
 
