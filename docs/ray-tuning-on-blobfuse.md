@@ -49,9 +49,12 @@ An AKS cluster with 10 virtual machines. To create an AKS cluster with 9 Standar
     kubectl get pods
     ```
 
-    This should also start the tuning job in a pod that starts with name "rayjob-tune-gpt2"
+    This should also start the tuning job in a pod that starts with name "rayjob-tune-gpt2". Example below:
 
-5. The status of the job can be tracked by tracking the logs of the rayjob-tune-gpt2 pod.
+   ![image](https://github.com/user-attachments/assets/a3e97de8-6f84-4976-8697-cd20f78e3274)
+
+
+6. The status of the job can be tracked by tracking the logs of the rayjob-tune-gpt2 pod.
 
     ```bash
     kubectl logs <rayjob_pod_name> -f
