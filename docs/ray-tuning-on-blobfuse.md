@@ -40,7 +40,7 @@ An AKS cluster with 10 virtual machines. To create an AKS cluster with 9 Standar
     kubectl apply -f sample-tuning-setup/storageclass.yaml
     kubectl apply -f sample-tuning-setup/pv.yaml
     kubectl apply -f sample-tuning-setup/pvc.yaml
-    kubectl apply -f sample-tuning-setup/raycluster.yaml
+    kubectl apply -f sample-tuning-setup/rayjob.yaml
     ```
 
     After a moment, you should be able to see the Ray pods running on the cluster by running the following command:
@@ -49,43 +49,29 @@ An AKS cluster with 10 virtual machines. To create an AKS cluster with 9 Standar
     kubectl get pods
     ```
 
-5. Open a terminal window and enable port-forwarding for the Ray service to access Ray locally.
+    This should also start the tuning job in a pod that starts with name "rayjob-tune-gpt2"
+
+5. The status of the job can be tracked by tracking the logs of the rayjob-tune-gpt2 pod.
 
     ```bash
-    kubectl port-forward services/raycluster-gpt2-head-svc 8265:8265
+    kubectl logs <rayjob_pod_name> -f
     ```
 
+5. Another way to track the status of the job is from the ray dashboard.
 
-6. Install Python, Pip and [Ray](https://docs.ray.io/en/latest/ray-overview/installation.html) on your local machine.
-   Open a new terminal window and run:
-   
-    ```bash
-    apt-get update
-    apt-install python3
-    apt-install python3-pip
-    pip install -U "ray[data,train,tune,serve]"
-    ```
-    
-    Set RAY_ADDRESS as environment variable
+    Find the service name of the ray job using the below command
 
     ```bash
-    export RAY_ADDRESS=http://127.0.0.1:8265
+    kubectl get services | grep rayjob-tune-gpt2
     ```
 
-## Run the tuning job
-
-1. To run the tuning job, run the gpt2_submit.py python scripts as below. The job will take ~8 minutes
-   to complete.
+    Open a terminal window and enable port-forwarding for the Ray service to access Ray locally.
 
     ```bash
-    python sample-tuning-setup/gpt2_submit.py
+    kubectl port-forward services/<rayjob_service_name> 8265:8265
     ```
-    
-1. To monitor the status of the tuning job, run the following command:
 
-    ```bash
-    ray job logs '<JOB_ID>' --follow
-    ```
+    Open "http://localhost:8265/" in any browser which should load the dashboard for monitoring the ray job.
 
 Once the run is complete, you will find the final model and checkpoint files in your blob container.
 
