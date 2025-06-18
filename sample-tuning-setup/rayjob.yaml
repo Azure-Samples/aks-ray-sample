@@ -6,7 +6,7 @@ spec:
   shutdownAfterJobFinishes: false
   entrypoint: python sample-tuning-setup/tune_gpt2.py --num_workers=10
   runtimeEnvYAML: |
-    working_dir: "https://github.com/nearora-msft/aks-ray-sample/archive/nearora/updated_ray_guidance.zip"
+    working_dir: "https://github.com/Azure-Samples/aks-ray-sample/archive/master.zip"
   # rayClusterSpec specifies the RayCluster instance to be created by the RayJob controller.
   rayClusterSpec:
     # Uncomment the next line to experiment with autoscaling.
