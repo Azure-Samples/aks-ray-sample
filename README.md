@@ -23,7 +23,7 @@ Clone the repository to your local machine. Then make sure you have all the prer
 
 ## Modle tuning with Ray
 
-YOu can run model tuning jobs easily on Ray cluster with Azure Blob storage. See the steps in [Ray tuning on Azure Blobs](./docs/ray-tuning-on-blobfuse.md)
+You can run model tuning jobs easily on Ray cluster with Azure Blob storage. See the steps in [Ray tuning on Azure Blobs](./docs/ray-tuning-on-blobfuse.md)
 
 ## Resources
 
