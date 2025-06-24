@@ -36,7 +36,6 @@ kubectl get nodes
 # Output the pods in the kuberay namespace
 kubectl get pods -n $kuberay_namespace
 
-kuberay_namespace="default"
 # Get the status of the Ray job
 job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobDeploymentStatus}')
 
@@ -91,6 +90,10 @@ EOF
 
 # Now find the public IP address of the ingress controller
 lb_public_ip=$(kubectl get ingress -n $kuberay_namespace -o jsonpath='{.items[?(@.metadata.name == "ray-dash")].status.loadBalancer.ingress[0].ip}')
+while [ -z ${lb_public_ip} ]; do
+	lb_public_ip=$(kubectl get ingress -n $kuberay_namespace -o jsonpath='{.items[?(@.metadata.name == "ray-dash")].status.loadBalancer.ingress[0].ip}')
+	sleep 1
+done
 
 echo "KubeRay Dashboard URL: http://$lb_public_ip/"
 
