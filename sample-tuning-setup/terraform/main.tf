@@ -37,8 +37,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
   # Default Node pool configuration
   default_node_pool {
     name            = "systempool"
-    vm_size         = var.system_node_pool_vm_size
-    node_count      = var.system_node_pool_node_count
+    vm_size         = var.system_nodepool_vm_size
+    node_count      = var.system_nodepool_node_count
     tags = { owner  = var.resource_group_owner}
     type = "VirtualMachineScaleSets"
   }
@@ -109,11 +109,21 @@ resource "azapi_update_resource" "aks-default-node-pool-systempool-taint" {
   depends_on = [null_resource.wait_for_aks]
 }
 
-resource "azurerm_kubernetes_cluster_node_pool" "workload" {
+resource "azurerm_kubernetes_cluster_node_pool" "workload1" {
   name                  = "nodepool1"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
-  vm_size               = var.ray_node_pool_vm_size
-  node_count            = var.ray_node_pool_node_count
+  vm_size               = var.ray_nodepool1_vm_size
+  node_count            = var.ray_nodepool1_node_count
+
+  depends_on = [azapi_update_resource.aks-default-node-pool-systempool-taint]
+}
+
+resource "azurerm_kubernetes_cluster_node_pool" "workload2" {
+  count                 = var.ray_nodepool2_node_count > 0 ? 1 : 0
+  name                  = "nodepool2"
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+  vm_size               = var.ray_nodepool2_vm_size
+  node_count            = var.ray_nodepool2_node_count
 
   depends_on = [azapi_update_resource.aks-default-node-pool-systempool-taint]
 }
@@ -207,7 +217,7 @@ resource "helm_release" "nginx_ingress" {
   chart      = "ingress-nginx"
   namespace  = var.kuberay_namespace
   create_namespace = true
-  depends_on = [azurerm_kubernetes_cluster_node_pool.workload]
+  depends_on = [azurerm_kubernetes_cluster_node_pool.workload1]
 }
 
 # Create Kuberay namespace and deploy Kuberay via Helm chart
@@ -230,7 +240,7 @@ resource "helm_release" "kuberay" {
   #   name  = "watchNamespace"
   #   value = "kuberay"
   # }
-  depends_on = [azurerm_kubernetes_cluster_node_pool.workload]
+  depends_on = [azurerm_kubernetes_cluster_node_pool.workload1]
 }
 
 # Provision PersistentVolumeClaim for Rayjob

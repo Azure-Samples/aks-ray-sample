@@ -26,29 +26,42 @@ variable "azure_kubernetes_version" {
   type        = string
 }
 
-variable "system_node_pool_vm_size" {
+variable "system_nodepool_vm_size" {
   type        = string
   description = "The size of the Virtual Machine."
   default     = "Standard_D2_v2"
 }
 
-variable "system_node_pool_node_count" {
+variable "system_nodepool_node_count" {
   type        = number
   description = "The initial quantity of nodes for the system node pool."
   default     = 1
 }
 
-variable "ray_node_pool_vm_size" {
+variable "ray_nodepool1_vm_size" {
   type        = string
-  description = "The size of the Virtual Machine."
+  description = "The size of the Virtual Machine of first nodepool."
   default     = "Standard_D16s_v5"
 }
 
 # It is recommended to configure worker node as rayworker count + 1
-variable "ray_node_pool_node_count" {
+variable "ray_nodepool1_node_count" {
   type        = number
   description = "The initial quantity of node for the workload pools."
   default     = 10
+}
+
+# It is recommended to configure second node pool only if required
+variable "ray_nodepool2_vm_size" {
+  type        = string
+  description = "The size of the Virtual Machine of second nodepool."
+  default     = "Standard_D16s_v3"
+}
+
+variable "ray_nodepool2_node_count" {
+  type        = number
+  description = "The initial quantity of node for the workload pools."
+  default     = 0
 }
 
 variable "ray_second_node_pool_vm_size" {

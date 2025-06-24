@@ -38,23 +38,9 @@ kubectl get pods -n $kuberay_namespace
 
 # Get the status of the Ray job
 job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobDeploymentStatus}')
+echo "Ray Job Status: $job_status"
 
-# Wait for the Ray job to complete
-while [ "$job_status" != "Complete" ]; do
-    echo -ne "Job Status: $job_status\\r"
-    sleep 30
-    job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobDeploymentStatus}')
-done
-echo "Job Status: $job_status"
-
-# Check if the job succeeded
-job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobStatus}')
-if [ "$job_status" != "SUCCEEDED" ]; then
-    echo "Job Failed!"
-    exit 1
-fi
-
-# If the job succeeded, get the Ray cluster head service
+# Once the job is available, get the Ray cluster head service
 rayclusterhead=$(kubectl get service -n $kuberay_namespace | grep 'rayjob-tune-gpt2' | grep 'ClusterIP' | awk '{print $1}')
 
 # Now create a service of type NodePort for the Ray cluster head
@@ -95,6 +81,29 @@ while [ -z ${lb_public_ip} ]; do
 	sleep 1
 done
 
-echo "KubeRay Dashboard URL: http://$lb_public_ip/"
+echo "KubeRay Dashboard URL(progress of rayjob can be viewed here): http://$lb_public_ip/"
+echo "Waiting for Kuberay job completion"
+
+# Wait for the Ray job to complete
+while [ "$job_status" != "Complete" ]; do
+    echo -ne "Job Status: $job_status\\r"
+    sleep 30
+    job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobDeploymentStatus}')
+done
+echo "Job Status: $job_status"
+
+# Check if the job succeeded
+job_status=$(kubectl get rayjobs -n $kuberay_namespace -o jsonpath='{.items[0].status.jobStatus}')
+if [ "$job_status" != "SUCCEEDED" ]; then
+    echo "Job Failed!"
+    exit 1
+else
+    volume_handle=$(kubectl get pv -o jsonpath="{.items[?(@.spec.claimRef.name=='pvc-blob-results')].spec.csi.volumeHandle}")
+    internal_rg=$(echo ${volume_handle} | cut -d '#' -f 1)
+    storage_account=$(echo ${volume_handle} | cut -d '#' -f 2)
+    pv_name=$(echo ${volume_handle} | cut -d '#' -f 3)
+    echo "To view the final model and checkpoint files go to Azure portal"
+    echo "Navigate through ResourceGroup ${internal_rg} --> Storage Account of ${storage_account} --> DataStorage --> Container of ${pv_name}"
+fi
 
 exit 0
