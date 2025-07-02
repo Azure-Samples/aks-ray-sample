@@ -3,80 +3,47 @@
 In this article, you will tune the GPT-2 large model using KubeRay, which will save the final model and checkpoints to an Azure Blob Storage account.
 
 ## Prerequisites
-An AKS cluster with 10 virtual machines. To create an AKS cluster with 9 Standard_D16d_v5 VMs and 1 Standard_D32d_v5 VM, run the following commands:
-
-```azurecli-interactive
-    az aks create --resource-group myResourceGroup --name myAKSCluster --node-count 9 --node-vm-size Standard_D16d_v5 --generate-ssh-keys
-    az aks nodepool add --resource-group myResourceGroup --cluster-name myAKSCluster --name nodepool2 --node-count 1 --node-vm-size Standard_D32d_v5
-```
-
-## Setup storage for the tuning job
-
-1. Create a Storage Account as described [here](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal).
-
-2. Create a container in that storage account as described [here](https://learn.microsoft.com/en-us/azure/storage/blobs/blob-containers-portal#create-a-container)
-
-3. Enable Azure Blob CSI driver on the AKS cluster as described [here](https://learn.microsoft.com/en-us/azure/aks/azure-blob-csi?tabs=NFS#enable-csi-driver-on-a-new-or-existing-aks-cluster).
-
-4. Mount Azure Blob Storage in AKS using the Blob CSI driver with managed identity. Follow the steps [here](https://github.com/kubernetes-sigs/blob-csi-driver/tree/master/deploy/example/blobfuse-mi#mount-azure-blob-storage-with-managed-identity) to create a Managed Identity and assign the Storage Blob Data Contributor role. 
-
-## Setup the AKS cluster and your local machine
-
-1. Install [KubeRay](https://docs.ray.io/en/latest/cluster/kubernetes/getting-started/kuberay-operator-installation.html#step-2-install-kuberay-operator) operator on your AKS cluster.
-
-    ```bash
-    helm repo add kuberay https://ray-project.github.io/kuberay-helm/
-    helm repo update
-    helm install kuberay-operator kuberay/kuberay-operator --version 1.3.0
-    ```
-
-2. Edit the pv.yaml file in the sample-tuning-setup directory, and update the values for RESOURCE_GROUP_NAME, STORAGE_ACCOUNT_NAME, and CONTAINER_NAME.
-
-3. Update the MANAGED_IDENTITY_CLIENT_ID in pv.yaml and storageclass.yaml to the client ID of the Managed Identity that now has access to your storage account. You can find the client ID by navigating to the Azure portal, selecting your Managed Identity, and copying the client ID from the 'Overview' section.
-
-4. Apply all the YAML files located in the sample-tuning-setup directory
-
-    ```bash
-    kubectl apply -f sample-tuning-setup/storageclass.yaml
-    kubectl apply -f sample-tuning-setup/pv.yaml
-    kubectl apply -f sample-tuning-setup/pvc.yaml
-    kubectl apply -f sample-tuning-setup/rayjob.yaml
-    ```
-
-    After a moment, you should be able to see the Ray pods running on the cluster by running the following command:
-
-    ```bash
-    kubectl get pods
-    ```
-
-    This should also start the tuning job in a pod that starts with name "rayjob-tune-gpt2". Example below:
-
-   ![image](https://github.com/user-attachments/assets/a3e97de8-6f84-4976-8697-cd20f78e3274)
+- Install Azure CLI by following [azure-cli](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt) doc.
+- Install terraform command line tool by following [installation](https://developer.hashicorp.com/terraform/install) doc.
 
 
-6. The status of the job can be tracked by tracking the logs of the rayjob-tune-gpt2 pod.
+### Quickstart
+1. Clone the repository https://github.com/Azure-Samples/aks-ray-sample on to your local machine.
+2. Navigate to the directory you cloned the repository and then navigate to sample-tunning-setup/terraform.
+3. Enable execute permissions on the `deploy.sh` script by running `chmod +x deploy.sh`.
+4. Run the `deploy.sh` script by running `./deploy.sh`. This script will deploy the AKS cluster, install the KubeRay operator then submit a training job pointing to azure blob storage to run on the AKS cluster.
 
-    ```bash
-    kubectl logs <rayjob_pod_name> -f
-    ```
-
-5. Another way to track the status of the job is from the ray dashboard.
-
-    Find the service name of the ray job using the below command
-
-    ```bash
-    kubectl get services | grep rayjob-tune-gpt2
-    ```
-
-    Open a terminal window and enable port-forwarding for the Ray service to access Ray locally.
-
-    ```bash
-    kubectl port-forward services/<rayjob_service_name> 8265:8265
-    ```
-
-    Open "http://localhost:8265/" in any browser which should load the dashboard for monitoring the ray job.
-
-Once the run is complete, you will find the final model and checkpoint files in your blob container.
-
-
-
+   Once the ray job starts running, open the Dashboard URL as show below to track the progress of the job.
+   ```sh
+   ...
+   ...
+   ...
+   Merged "cluster-raydemo-gzumb2" as current context in /home/mittas/.kube/config
+   Current Kubernetes Context: cluster-raydemo-gzumb2
+   NAME                                 STATUS   ROLES    AGE     VERSION
+   aks-nodepool1-13403768-vmss000000    Ready    <none>   3m4s    v1.32.4
+   aks-nodepool1-13403768-vmss000001    Ready    <none>   2m40s   v1.32.4
+   aks-nodepool1-13403768-vmss000002    Ready    <none>   2m39s   v1.32.4
+   aks-nodepool1-13403768-vmss000003    Ready    <none>   3m9s    v1.32.4
+   aks-nodepool1-13403768-vmss000004    Ready    <none>   2m46s   v1.32.4
+   aks-nodepool1-13403768-vmss000005    Ready    <none>   2m42s   v1.32.4
+   aks-systempool-37389976-vmss000000   Ready    <none>   10m     v1.32.4
+   NAME                                                         READY   STATUS              RESTARTS   AGE
+   ingress-nginx-controller-68547f7c99-hzl6t                    1/1     Running             0          75s
+   kuberay-operator-b568bb49f-nd9qn                             1/1     Running             0          97s
+   rayjob-tune-gpt2-raycluster-bd7lt-head-kg4vl                 0/1     ContainerCreating   0          46s
+   rayjob-tune-gpt2-raycluster-bd7lt-large-group-worker-b7nfh   0/1     Init:0/2            0          46s
+   rayjob-tune-gpt2-raycluster-bd7lt-large-group-worker-lgd2m   0/1     Init:0/2            0          46s
+   rayjob-tune-gpt2-raycluster-bd7lt-large-group-worker-s976k   0/1     Init:0/2            0          46s
+   rayjob-tune-gpt2-raycluster-bd7lt-large-group-worker-t4dg6   0/1     Init:0/2            0          46s
+   rayjob-tune-gpt2-raycluster-bd7lt-large-group-worker-vh4gz   0/1     Init:0/2            0          46s
+   Ray Job Status: Initializing
+   service/ray-dash exposed
+   ingress.networking.k8s.io/ray-dash created
+   KubeRay Dashboard URL(progress of rayjob can be viewed here): http://4.236.5.17/
+   Waiting for Kuberay job completion
+   Job Status: Complete
+   To view the final model and checkpoint files go to Azure portal
+   Navigate through ResourceGroup MC_rg-raydemo-gzumb2_cluster-raydemo-gzumb2_westus3 --> Storage Account of fuse819db34db11346b58ab --> DataStorage --> Container of pvc-38112449-0e97-4b9e-94ff-e70300e2c7a9
+   ```
+   Note: The above script utilizes Azure Blob Storage by dynamically provisioning PersistentVolumes. The final model and checkpoint files can be accessed in the designated blob containers.
