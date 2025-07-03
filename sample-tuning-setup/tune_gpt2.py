@@ -54,12 +54,13 @@ def main(args):
     _ = run_on_every_node(download_model)
 
     print("Loading tiny_shakespeare dataset...")
-    current_dataset = load_dataset("tiny_shakespeare")
+    current_dataset = load_dataset("winglian/tiny-shakespeare")
 
     ray_datasets = {
         "train": ray.data.from_huggingface(current_dataset["train"]),
-        "validation": ray.data.from_huggingface(current_dataset["validation"]),
+        "validation": ray.data.from_huggingface(current_dataset["test"]),
     }
+    print(ray_datasets["train"].take(1))
 
     print("Processing datasets...")
     processed_datasets = {
