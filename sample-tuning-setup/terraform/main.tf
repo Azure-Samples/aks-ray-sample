@@ -11,8 +11,22 @@ resource "azurerm_resource_group" "rg" {
   location = var.resource_group_location
 }
 
+
+# Register Microsoft.Monitor (no error on double registration)
+resource "azurerm_resource_provider_registration" "monitor" {
+  name = "Microsoft.Monitor"
+}
+
+# Register Microsoft.Dashboard workspace (no error on double registration)
+resource "azurerm_resource_provider_registration" "dashboard" {
+  name = "Microsoft.Dashboard"
+}
+
+
 # Configure log analytics workspace
 resource "azurerm_log_analytics_workspace" "log_analytics" {
+  depends_on = [azurerm_resource_provider_registration.monitor]
+
   name                = "law-${var.project_prefix}-${random_string.suffix.result}"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name

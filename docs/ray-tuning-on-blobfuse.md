@@ -9,7 +9,7 @@ In this article, you will tune the GPT-2 large model using KubeRay, which will s
 
 ### Quickstart
 1. Clone the repository https://github.com/Azure-Samples/aks-ray-sample on to your local machine.
-2. Navigate to the directory you cloned the repository and then navigate to sample-tunning-setup/terraform.
+2. Navigate to the directory you cloned the repository and then navigate to `sample-tuning-setup/terraform`.
 3. Enable execute permissions on the `deploy.sh` script by running `chmod +x deploy.sh`.
 4. Run the `deploy.sh` script by running `./deploy.sh`. This script will deploy the AKS cluster, install the KubeRay operator then submit a training job pointing to azure blob storage to run on the AKS cluster.
 

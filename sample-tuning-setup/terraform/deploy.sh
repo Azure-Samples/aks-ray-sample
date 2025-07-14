@@ -8,12 +8,24 @@ fi
 
 # Initialize Terraform
 terraform init
+if [ $? -ne 0 ]; then
+	echo "Failed to initialize terraform"
+	exit 1
+fi
 
 # Create a Terraform plan
 terraform plan -out main.tfplan
+if [ $? -ne 0 ]; then
+	echo "Failed to execute terraform plan"
+	exit 1
+fi
 
 # Apply the Terraform plan
 terraform apply main.tfplan
+if [ $? -ne 0 ]; then
+	echo "Failed to apply terrafrom"
+	exit 1
+fi
 
 # Retrieve the Terraform outputs and store in variables
 resource_group_name=$(terraform output -raw resource_group_name)
@@ -25,6 +37,10 @@ kuberay_namespace=$(terraform output -raw kubernetes_rayjob_namespace)
 az aks get-credentials \
     --resource-group $resource_group_name \
     --name $aks_cluster_name
+if [ $? -ne 0 ]; then
+	echo "Failed to get credentials of ${aks_cluster_name} cluster under ${resource_group_name}"
+	exit 1
+fi
 
 # Output the current Kubernetes context
 current_context=$(kubectl config current-context)
@@ -42,6 +58,10 @@ echo "Ray Job Status: $job_status"
 
 # Once the job is available, get the Ray cluster head service
 rayclusterhead=$(kubectl get service -n $kuberay_namespace | grep 'rayjob-tune-gpt2' | grep 'ClusterIP' | awk '{print $1}')
+if [ $? -ne 0 ]; then
+	echo "Failed to fetch ray cluster head service"
+	exit 1
+fi
 
 # Now create a service of type NodePort for the Ray cluster head
 kubectl expose service $rayclusterhead \
@@ -50,6 +70,10 @@ kubectl expose service $rayclusterhead \
 --target-port=8265 \
 --type=NodePort \
 --name=ray-dash
+if [ $? -ne 0 ]; then
+	echo "Failed to create NodePort service for ray cluster head"
+	exit 1
+fi
 
 # Create an ingress for the KubeRay dashboard
 cat <<EOF | kubectl apply -f -
@@ -73,6 +97,10 @@ spec:
         path: /
         pathType: Prefix
 EOF
+if [ $? -ne 0 ]; then
+	echo "Failed to create ingress service to expose kuberay dashboard"
+	exit 1
+fi
 
 # Now find the public IP address of the ingress controller
 lb_public_ip=$(kubectl get ingress -n $kuberay_namespace -o jsonpath='{.items[?(@.metadata.name == "ray-dash")].status.loadBalancer.ingress[0].ip}')
