@@ -48,3 +48,7 @@ output "system_node_pool_name" {
 output "kubernetes_rayjob_namespace" {
   value = kubernetes_persistent_volume_claim.rayjob_pvc.metadata[0].namespace
 }
+
+output "azure_grafana_dashboard_name" {
+  value = azurerm_dashboard_grafana.graf.name
+}

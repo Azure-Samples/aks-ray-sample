@@ -122,3 +122,9 @@ variable "kuberayjob_manifest_path" {
   type        = string
   default     = "../rayjob.yaml"
 }
+
+variable "kuberay_scrape_config_path" {
+  description = "Scrapeconfig path to scrape kuberay metrics"
+  type        = string
+  default     = "../kuberay-scrapeconfig.yaml"
+}

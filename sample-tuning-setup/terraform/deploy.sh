@@ -6,6 +6,14 @@ if ! az account show > /dev/null 2>&1; then
     exit 1
 fi
 
+# Register if provider is not registered for given subscription
+for provider in Microsoft.Monitor Microsoft.Dashboard; do
+	registered_state=$(az provider show --namespace ${provider} --query registrationState -o tsv)
+	if [ ${registered_state} != "Registered" ]; then
+		az provider register --namespace ${provider}
+	fi
+done
+
 # Initialize Terraform
 terraform init
 if [ $? -ne 0 ]; then
@@ -32,6 +40,7 @@ resource_group_name=$(terraform output -raw resource_group_name)
 system_node_pool_name=$(terraform output -raw system_node_pool_name)
 aks_cluster_name=$(terraform output -raw kubernetes_cluster_name)
 kuberay_namespace=$(terraform output -raw kubernetes_rayjob_namespace)
+grafana_name=$(terraform output -raw azure_grafana_dashboard_name)
 
 # Get AKS credentials for the cluster
 az aks get-credentials \
@@ -69,7 +78,8 @@ kubectl expose service $rayclusterhead \
 --port=80 \
 --target-port=8265 \
 --type=NodePort \
---name=ray-dash
+--name=ray-dash \
+--labels='ray.io/node-type=head-expose'
 if [ $? -ne 0 ]; then
 	echo "Failed to create NodePort service for ray cluster head"
 	exit 1
@@ -104,6 +114,7 @@ fi
 
 # Now find the public IP address of the ingress controller
 lb_public_ip=$(kubectl get ingress -n $kuberay_namespace -o jsonpath='{.items[?(@.metadata.name == "ray-dash")].status.loadBalancer.ingress[0].ip}')
+echo "Waiting for ingress service to provide public IP (to access dashboard)..."
 while [ -z ${lb_public_ip} ]; do
 	lb_public_ip=$(kubectl get ingress -n $kuberay_namespace -o jsonpath='{.items[?(@.metadata.name == "ray-dash")].status.loadBalancer.ingress[0].ip}')
 	sleep 1
@@ -133,5 +144,13 @@ else
     echo "To view the final model and checkpoint files go to Azure portal"
     echo "Navigate through ResourceGroup ${internal_rg} --> Storage Account of ${storage_account} --> DataStorage --> Container of ${pv_name}"
 fi
+
+
+# Configure grafana dashboard
+kubectl cp $(kubectl get pod -l ray.io/node-type=head -o jsonpath='{.items[0].metadata.name}'):/tmp/ray/session_latest/metrics/grafana/dashboards/ ./dashboards/
+
+for file_path in ./dashboards/*; do
+	az grafana dashboard update --name ${grafana_name} --resource-group ${resource_group_name} --definition @${file_path} --overwrite true
+done
 
 exit 0
