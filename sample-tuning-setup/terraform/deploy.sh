@@ -6,25 +6,50 @@ if ! az account show > /dev/null 2>&1; then
     exit 1
 fi
 
+# Register if provider is not registered for given subscription
+for provider in Microsoft.Monitor Microsoft.Dashboard; do
+	registered_state=$(az provider show --namespace ${provider} --query registrationState -o tsv)
+	if [ ${registered_state} != "Registered" ]; then
+		az provider register --namespace ${provider}
+	fi
+done
+
 # Initialize Terraform
 terraform init
+if [ $? -ne 0 ]; then
+	echo "Failed to initialize terraform"
+	exit 1
+fi
 
 # Create a Terraform plan
 terraform plan -out main.tfplan
+if [ $? -ne 0 ]; then
+	echo "Failed to execute terraform plan"
+	exit 1
+fi
 
 # Apply the Terraform plan
 terraform apply main.tfplan
+if [ $? -ne 0 ]; then
+	echo "Failed to apply terrafrom"
+	exit 1
+fi
 
 # Retrieve the Terraform outputs and store in variables
 resource_group_name=$(terraform output -raw resource_group_name)
 system_node_pool_name=$(terraform output -raw system_node_pool_name)
 aks_cluster_name=$(terraform output -raw kubernetes_cluster_name)
 kuberay_namespace=$(terraform output -raw kubernetes_rayjob_namespace)
+grafana_name=$(terraform output -raw azure_grafana_dashboard_name)
 
 # Get AKS credentials for the cluster
 az aks get-credentials \
     --resource-group $resource_group_name \
     --name $aks_cluster_name
+if [ $? -ne 0 ]; then
+	echo "Failed to get credentials of ${aks_cluster_name} cluster under ${resource_group_name}"
+	exit 1
+fi
 
 # Output the current Kubernetes context
 current_context=$(kubectl config current-context)
@@ -42,6 +67,10 @@ echo "Ray Job Status: $job_status"
 
 # Once the job is available, get the Ray cluster head service
 rayclusterhead=$(kubectl get service -n $kuberay_namespace | grep 'rayjob-tune-gpt2' | grep 'ClusterIP' | awk '{print $1}')
+if [ $? -ne 0 ]; then
+	echo "Failed to fetch ray cluster head service"
+	exit 1
+fi
 
 # Now create a service of type NodePort for the Ray cluster head
 kubectl expose service $rayclusterhead \
@@ -49,7 +78,12 @@ kubectl expose service $rayclusterhead \
 --port=80 \
 --target-port=8265 \
 --type=NodePort \
---name=ray-dash
+--name=ray-dash \
+--labels='ray.io/node-type=head-expose'
+if [ $? -ne 0 ]; then
+	echo "Failed to create NodePort service for ray cluster head"
+	exit 1
+fi
 
 # Create an ingress for the KubeRay dashboard
 cat <<EOF | kubectl apply -f -
@@ -73,9 +107,14 @@ spec:
         path: /
         pathType: Prefix
 EOF
+if [ $? -ne 0 ]; then
+	echo "Failed to create ingress service to expose kuberay dashboard"
+	exit 1
+fi
 
 # Now find the public IP address of the ingress controller
 lb_public_ip=$(kubectl get ingress -n $kuberay_namespace -o jsonpath='{.items[?(@.metadata.name == "ray-dash")].status.loadBalancer.ingress[0].ip}')
+echo "Waiting for ingress service to provide public IP (to access dashboard)..."
 while [ -z ${lb_public_ip} ]; do
 	lb_public_ip=$(kubectl get ingress -n $kuberay_namespace -o jsonpath='{.items[?(@.metadata.name == "ray-dash")].status.loadBalancer.ingress[0].ip}')
 	sleep 1
@@ -105,5 +144,13 @@ else
     echo "To view the final model and checkpoint files go to Azure portal"
     echo "Navigate through ResourceGroup ${internal_rg} --> Storage Account of ${storage_account} --> DataStorage --> Container of ${pv_name}"
 fi
+
+
+# Configure grafana dashboard
+kubectl cp $(kubectl get pod -l ray.io/node-type=head -o jsonpath='{.items[0].metadata.name}'):/tmp/ray/session_latest/metrics/grafana/dashboards/ ./dashboards/
+
+for file_path in ./dashboards/*; do
+	az grafana dashboard update --name ${grafana_name} --resource-group ${resource_group_name} --definition @${file_path} --overwrite true
+done
 
 exit 0

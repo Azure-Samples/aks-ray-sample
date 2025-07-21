@@ -11,17 +11,13 @@ resource "azurerm_resource_group" "rg" {
   location = var.resource_group_location
 }
 
-# Configure log analytics workspace
-resource "azurerm_log_analytics_workspace" "log_analytics" {
-  name                = "law-${var.project_prefix}-${random_string.suffix.result}"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
+data "azurerm_client_config" "current" {}
 
-  tags = {
-    owner = var.resource_group_owner
-  }
+# Configure monitor workspace
+resource "azurerm_monitor_workspace" "amw" {
+  name                = "amon-${var.project_prefix}-${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
 }
 
 # Configuration for AKS cluster
@@ -69,6 +65,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
     blob_driver_enabled         = var.azure_storage_profile["enable_blob_csi_driver"]
     snapshot_controller_enabled = var.azure_storage_profile["enable_snapshot_controller"]
   }
+
+  # Enable Managed Prometheus
+  monitor_metrics {}
 }
 
 # Wait for Kubernetes cluster
@@ -109,6 +108,7 @@ resource "azapi_update_resource" "aks-default-node-pool-systempool-taint" {
   depends_on = [null_resource.wait_for_aks]
 }
 
+
 resource "azurerm_kubernetes_cluster_node_pool" "workload1" {
   name                  = "nodepool1"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
@@ -128,58 +128,6 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload2" {
   depends_on = [azapi_update_resource.aks-default-node-pool-systempool-taint]
 }
 
-resource "azurerm_monitor_workspace" "amw" {
-  name                = "amon-${var.project_prefix}-${random_string.suffix.result}"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-}
-
-resource "azurerm_monitor_data_collection_endpoint" "prom_endpoint" {
-  name                = "prom-${var.project_prefix}-${random_string.suffix.result}"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  kind                = "Linux"
-}
-
-resource "azurerm_monitor_data_collection_rule" "azprom_dcr" {
-  name                        = "promdcr-${var.project_prefix}-${random_string.suffix.result}"
-  resource_group_name         = azurerm_resource_group.rg.name
-  location                    = azurerm_resource_group.rg.location
-  data_collection_endpoint_id = azurerm_monitor_data_collection_endpoint.prom_endpoint.id
-
-  data_sources {
-    prometheus_forwarder {
-      name    = "PrometheusDataSource"
-      streams = ["Microsoft-PrometheusMetrics"]
-    }
-  }
-
-  destinations {
-    monitor_account {
-      monitor_account_id = azurerm_monitor_workspace.amw.id
-      name               = azurerm_monitor_workspace.amw.name
-    }
-  }
-
-  data_flow {
-    streams      = ["Microsoft-PrometheusMetrics"]
-    destinations = [azurerm_monitor_workspace.amw.name]
-  }
-}
-
-# associate to a Data Collection Rule
-resource "azurerm_monitor_data_collection_rule_association" "example_dcr_to_aks" {
-  name                    = "dcr-${azurerm_kubernetes_cluster.aks.name}"
-  target_resource_id      = azurerm_kubernetes_cluster.aks.id
-  data_collection_rule_id = azurerm_monitor_data_collection_rule.azprom_dcr.id
-}
-
-# associate to a Data Collection Endpoint
-resource "azurerm_monitor_data_collection_rule_association" "example_dce_to_aks" {
-  target_resource_id          = azurerm_kubernetes_cluster.aks.id
-  data_collection_endpoint_id = azurerm_monitor_data_collection_endpoint.prom_endpoint.id
-}
-
 # Add managed grafana
 resource "azurerm_dashboard_grafana" "graf" {
   name                = "graf-${var.project_prefix}-${random_string.suffix.result}"
@@ -197,10 +145,17 @@ resource "azurerm_dashboard_grafana" "graf" {
   }
 }
 
+# Assign role to resource group
 resource "azurerm_role_assignment" "graf_role" {
   scope                = azurerm_resource_group.rg.id
   role_definition_name = "Monitoring Reader"
   principal_id         = azurerm_dashboard_grafana.graf.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "grafana_admin_self" {
+  principal_id         = data.azurerm_client_config.current.object_id
+  role_definition_name = "Grafana Admin"
+  scope                = azurerm_dashboard_grafana.graf.id
 }
 
 # Extract the Kubeconfig info from AKS data source
@@ -265,6 +220,11 @@ resource "kubernetes_persistent_volume_claim" "rayjob_pvc" {
 # Deploy Rayjob
 resource "kubectl_manifest" "rayjob" {
   yaml_body = file(var.kuberayjob_manifest_path)
-#  namespace = var.kuberay_namespace
   depends_on = [kubernetes_persistent_volume_claim.rayjob_pvc]
+}
+
+# Configure to scrape ray metrics
+resource "kubectl_manifest" "kuberay_scrape_config" {
+  depends_on = [kubectl_manifest.rayjob]
+  yaml_body = file(var.kuberay_scrape_config_path)
 }
