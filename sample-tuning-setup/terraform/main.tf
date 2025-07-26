@@ -18,6 +18,9 @@ resource "azurerm_monitor_workspace" "amw" {
   name                = "amon-${var.project_prefix}-${random_string.suffix.result}"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
+  tags = {
+    owner = var.resource_group_owner
+  }
 }
 
 # Configuration for AKS cluster
@@ -126,6 +129,52 @@ resource "azurerm_kubernetes_cluster_node_pool" "workload2" {
   node_count            = var.ray_nodepool2_node_count
 
   depends_on = [azapi_update_resource.aks-default-node-pool-systempool-taint]
+}
+
+resource "azurerm_monitor_data_collection_endpoint" "prom_endpoint" {
+  name                = "prom-${var.project_prefix}-${random_string.suffix.result}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  kind                = "Linux"
+}
+
+resource "azurerm_monitor_data_collection_rule" "azprom_dcr" {
+  name                        = "promdcr-${var.project_prefix}-${random_string.suffix.result}"
+  resource_group_name         = azurerm_resource_group.rg.name
+  location                    = azurerm_resource_group.rg.location
+  data_collection_endpoint_id = azurerm_monitor_data_collection_endpoint.prom_endpoint.id
+
+  data_sources {
+    prometheus_forwarder {
+      name    = "PrometheusDataSource"
+      streams = ["Microsoft-PrometheusMetrics"]
+    }
+  }
+
+  destinations {
+    monitor_account {
+      monitor_account_id = azurerm_monitor_workspace.amw.id
+      name               = azurerm_monitor_workspace.amw.name
+    }
+  }
+
+  data_flow {
+    streams      = ["Microsoft-PrometheusMetrics"]
+    destinations = [azurerm_monitor_workspace.amw.name]
+  }
+}
+
+# associate to a Data Collection Rule
+resource "azurerm_monitor_data_collection_rule_association" "associate_dcr_to_aks" {
+  name                    = "dcr-${azurerm_kubernetes_cluster.aks.name}"
+  target_resource_id      = azurerm_kubernetes_cluster.aks.id
+  data_collection_rule_id = azurerm_monitor_data_collection_rule.azprom_dcr.id
+}
+
+# associate to a Data Collection Endpoint
+resource "azurerm_monitor_data_collection_rule_association" "associate_dce_to_aks" {
+  target_resource_id          = azurerm_kubernetes_cluster.aks.id
+  data_collection_endpoint_id = azurerm_monitor_data_collection_endpoint.prom_endpoint.id
 }
 
 # Add managed grafana
