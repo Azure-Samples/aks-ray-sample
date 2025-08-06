@@ -21,7 +21,6 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   name                             = random_pet.azurerm_kubernetes_cluster_name.id
   resource_group_name              = azurerm_resource_group.rg.name
   dns_prefix                       = random_pet.azurerm_kubernetes_cluster_dns_prefix.id
-  http_application_routing_enabled = true
     
   identity {
     type = "SystemAssigned"
