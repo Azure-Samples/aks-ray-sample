@@ -196,7 +196,7 @@ resource "azurerm_dashboard_grafana" "graf" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   api_key_enabled     = true
-  grafana_major_version = "10"
+  grafana_major_version = "11"
 
   identity {
     type = "SystemAssigned"
