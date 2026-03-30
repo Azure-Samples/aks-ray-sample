@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Ray version to use (can be overridden via environment variable)
+RAY_VERSION=${RAY_VERSION:-"2.54.1"}
+
 # Check if the user is logged into Azure CLI
 if ! az account show > /dev/null 2>&1; then
     echo "Please login to Azure CLI using 'az login' before running this script."
@@ -53,13 +56,17 @@ helm upgrade \
 --timeout 10m0s \
 --namespace "$kuberay_namespace" \
 --create-namespace kuberay-operator kuberay/kuberay-operator \
---version 1.1.1
+--version 1.6.0
 
 # Output the pods in the kuberay namespace
 kubectl get pods -n $kuberay_namespace
 
 # Download the PyTorch MNIST job YAML file
 curl -LO https://raw.githubusercontent.com/ray-project/kuberay/master/ray-operator/config/samples/pytorch-mnist/ray-job.pytorch-mnist.yaml
+
+# Update the Ray version in the downloaded job YAML
+sed -i "s/rayVersion: '.*'/rayVersion: '${RAY_VERSION}'/g" ray-job.pytorch-mnist.yaml
+sed -i "s|image: rayproject/ray:.*|image: rayproject/ray:${RAY_VERSION}|g" ray-job.pytorch-mnist.yaml
 
 # Train a PyTorch Model on Fashion MNIST
 kubectl apply -n $kuberay_namespace -f ray-job.pytorch-mnist.yaml
