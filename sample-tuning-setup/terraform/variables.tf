@@ -22,7 +22,7 @@ variable "project_prefix" {
 
 variable "azure_kubernetes_version" {
   description = "Version of the azure kubernetes"
-  default = "1.32"
+  default = "1.33"
   type        = string
 }
 
