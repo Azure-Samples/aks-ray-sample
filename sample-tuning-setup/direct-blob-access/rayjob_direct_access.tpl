@@ -13,7 +13,7 @@ spec:
     # Uncomment the next line to experiment with autoscaling.
     # enableInTreeAutoscaling: true
     # The version of Ray you are using. Make sure all Ray containers are running this version of Ray.
-    rayVersion: '2.43.0'
+    rayVersion: '2.54.1'
     headGroupSpec:
       # Kubernetes Service Type, valid values are 'ClusterIP', 'NodePort' and 'LoadBalancer'
       serviceType: ClusterIP

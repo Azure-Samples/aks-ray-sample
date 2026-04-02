@@ -27,10 +27,11 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   }
 
   default_node_pool {
-    name       = "systempool"
-    vm_size    = var.system_node_pool_vm_size
-    node_count = var.system_node_pool_node_count
-    tags = { owner = var.resource_group_owner }
+    name                         = "systempool"
+    vm_size                      = var.system_node_pool_vm_size
+    node_count                   = var.system_node_pool_node_count
+    only_critical_addons_enabled = true
+    tags                         = { owner = var.resource_group_owner }
   }
 
   linux_profile {
@@ -71,7 +72,7 @@ resource "null_resource" "wait_for_aks" {
 }
 
 resource "azapi_update_resource" "k8s-default-node-pool-systempool-taint" {
-  type        = "Microsoft.ContainerService/managedClusters@2024-09-02-preview"
+  type        = "Microsoft.ContainerService/managedClusters@2026-01-01"
   resource_id = azurerm_kubernetes_cluster.k8s.id
   body = jsonencode({
     properties = {

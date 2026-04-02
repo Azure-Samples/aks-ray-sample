@@ -12,7 +12,6 @@ This article provides two methods to deploy the Ray cluster on AKS:
 * Review the [Ray cluster on AKS overview](./ray-on-aks.md) to understand the components and deployment process.
 * An Azure subscription. If you don't have an Azure subscription, you can create a free account [here](https://azure.microsoft.com/free/).
 * The Azure CLI installed on your local machine. You can install it using the instructions in [How to install the Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli).
-* The [Azure Kubernetes Service Preview extension](https://learn.microsoft.com/azure/aks/draft#install-the-aks-preview-azure-cli-extension) installed.
 * [Helm](https://helm.sh/docs/intro/install/) installed.
 * [Terraform client tools](https://developer.hashicorp.com/terraform/install) or [OpenTofu](https://opentofu.org/) installed. This article uses Terrafrom, but the modules used should be compatible with OpenTofu.
 

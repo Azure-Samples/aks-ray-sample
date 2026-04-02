@@ -22,7 +22,7 @@ variable "project_prefix" {
 
 variable "azure_kubernetes_version" {
   description = "Version of the azure kubernetes"
-  default = "1.32"
+  default = "1.33"
   type        = string
 }
 
@@ -96,7 +96,7 @@ variable "azure_storage_profile" {
 variable "kuberay_version" {
   description                    = "Kuberay version that needs to be installed"
   type                           = string
-  default                        = "1.4.2"
+  default                        = "1.6.0"
 }
 
 variable "kuberay_persistent_volume_claim_name" {

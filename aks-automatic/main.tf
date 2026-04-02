@@ -19,7 +19,7 @@ resource "tls_private_key" "ssh_key" {
 }
 
 resource "azapi_resource" "aks_auto" {
-  type      = "Microsoft.ContainerService/managedClusters@2024-06-02-preview"
+  type      = "Microsoft.ContainerService/managedClusters@2026-01-01"
   name      = "aks-${var.project_prefix}-${random_string.suffix.result}"
   parent_id = azurerm_resource_group.rg.id
   location  = var.location
@@ -28,7 +28,7 @@ resource "azapi_resource" "aks_auto" {
   body = jsonencode({
 
     properties = {
-      kubernetesVersion = "1.31"
+      kubernetesVersion = "1.33"
       nodeResourceGroup = "MC-aks-${var.project_prefix}-${random_string.suffix.result}"
       agentPoolProfiles = [
         {
@@ -97,7 +97,7 @@ resource "null_resource" "wait_for_aks" {
 }
 
 resource "azapi_update_resource" "k8s-default-node-pool-systempool-taint" {
-  type        = "Microsoft.ContainerService/managedClusters@2024-06-02-preview"
+  type        = "Microsoft.ContainerService/managedClusters@2026-01-01"
   resource_id = azapi_resource.aks_auto.id
   body = jsonencode({
     properties = {

@@ -38,7 +38,7 @@ spec:
       CPUS_PER_WORKER: "2"
   # rayClusterSpec specifies the RayCluster instance to be created by the RayJob controller.
   rayClusterSpec:
-    rayVersion: '2.41.0'
+    rayVersion: '2.54.1'
     headGroupSpec:
       rayStartParams: {}
       # Pod template
@@ -46,7 +46,7 @@ spec:
         spec:
           containers:
             - name: ray-head
-              image: rayproject/ray:2.41.0
+              image: rayproject/ray:2.54.1
               ports:
                 - containerPort: 6379
                   name: gcs-server
@@ -104,7 +104,7 @@ spec:
           spec:
             containers:
               - name: ray-worker
-                image: rayproject/ray:2.41.0
+                image: rayproject/ray:2.54.1
                 resources:
                   limits:
                     cpu: "3"

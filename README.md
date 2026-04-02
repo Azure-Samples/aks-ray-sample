@@ -10,7 +10,6 @@ Clone the repository to your local machine. Then make sure you have all the prer
 
 1. An Azure subscription. If you don't have an Azure subscription, you can create a free account [here](https://azure.microsoft.com/free/).
 1. The Azure CLI installed on your local machine. You can install the Azure CLI by following the instructions [here](https://docs.microsoft.com/cli/azure/install-azure-cli).
-1. The [Azure Kubernetes Service Preview extension](https://learn.microsoft.com/azure/aks/draft#install-the-aks-preview-azure-cli-extension) must be installed.
 1. [Helm](https://helm.sh/docs/intro/install/) must be installed.
 1. [Terraform client tools](https://developer.hashicorp.com/terraform/install) or [OpenTofu](https://opentofu.org/) must be installed. This guide makes use of Terrafrom, however the modules used should be compatible with OpenTofu.
 

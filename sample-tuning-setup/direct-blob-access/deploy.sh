@@ -255,7 +255,7 @@ fi
 
 echo "Deploying KubeRay Operator in ${KUBERAY_NAMESPACE} namespace"
 helm repo add kuberay https://ray-project.github.io/kuberay-helm/
-helm install kuberay-operator kuberay/kuberay-operator --version 1.4.2 --namespace ${KUBERAY_NAMESPACE} --create-namespace
+helm install kuberay-operator kuberay/kuberay-operator --version 1.6.0 --namespace ${KUBERAY_NAMESPACE} --create-namespace
 
 # Output the pods in the kuberay namespace
 kubectl get pods -n ${KUBERAY_NAMESPACE}
